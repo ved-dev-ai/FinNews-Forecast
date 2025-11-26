@@ -1,0 +1,51 @@
+services:
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"      # API port
+      - "9001:9001"      # Console UI port
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: no
+    networks:
+      - fnf-network
+
+  jupyter:
+    image: jupyter/pyspark-notebook:latest
+    ports:
+      - "8888:8888"
+    environment:
+      JUPYTER_ENABLE_LAB: "yes"
+      GRANT_SUDO: "yes"
+      # Allow Jupyter to connect to other services
+      MINIO_ENDPOINT: "minio:9000"
+      MINIO_ACCESS_KEY: "minioadmin"
+      MINIO_SECRET_KEY: "minioadmin"
+    volumes:
+      - ./notebooks:/home/jovyan/notebooks
+      - ./scripts:/home/jovyan/scripts 
+    user: root  # Needed to install packages
+    command: start-notebook.sh --NotebookApp.token='' --NotebookApp.password=''
+    restart: no
+    networks:
+      - fnf-network
+    depends_on:
+      - minio
+
+volumes:
+  minio-data:
+    external: true
+    name: data-stack-setup_minio-data
+
+networks:
+  fnf-network:
+    driver: bridge

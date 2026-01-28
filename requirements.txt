@@ -1,0 +1,14 @@
+boto3 
+huggingface_hub 
+minio 
+lxml
+torch
+transformers
+pyarrow
+tqdm
+streamlit 
+pandas 
+numpy 
+scikit-learn 
+xgboost 
+plotly
